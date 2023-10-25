@@ -1,4 +1,5 @@
-from django.http import JsonResponse
+import csv
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render,redirect
 from django.contrib.auth.decorators import login_required
 from .models import *
@@ -160,3 +161,14 @@ def expense_category_summary(request):
 
 def stats_view(request):
     return render(request, 'expenses/stats.html')
+
+def export_csv(request):
+    response = HttpResponse(content_type = 'text/csv')
+    response['Content-Disposition'] = 'attachment; filename = expenses'+\
+        str(datetime.datetime.now())+'.csv'
+    writer = csv.writer(response)
+    writer.writerow(["Amount","Description","Category","Date"])
+    expenses = Expense.objects.filter(owner = request.user)
+    for expense in expenses:
+        writer.writerow([expense.amount,expense.description,expense.category,expense.date])
+    return response
